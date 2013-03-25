@@ -27,4 +27,6 @@
 @property (nonatomic, strong) AKTabBar *tabBar;
 @property (nonatomic, strong) UIView *contentView;
 @property (nonatomic, assign) BOOL isTabBarHidding;
+
+@property (nonatomic) BOOL adjustForStatusBar;
 @end

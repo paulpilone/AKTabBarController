@@ -83,6 +83,8 @@
 // Tab selected text color
 @property (nonatomic, strong)  UIColor *selectedTextColor;
 
+@property (nonatomic, readonly, strong) UIViewController *selectedViewController;
+
 // Initialization with a specific height.
 - (id)initWithTabBarHeight:(NSUInteger)height;
 

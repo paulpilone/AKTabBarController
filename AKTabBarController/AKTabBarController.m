@@ -41,7 +41,7 @@ typedef enum {
 } AKShowHideFrom;
 
 // Current active view controller
-@property (nonatomic, strong) UIViewController *selectedViewController;
+@property (nonatomic, readwrite, strong) UIViewController *selectedViewController;
 
 - (void)loadTabs;
 - (void)showTabBar:(AKShowHideFrom)showHideFrom animated:(BOOL)animated;
@@ -66,6 +66,19 @@ typedef enum {
 - (id)init
 {    
     return [self initWithTabBarHeight:kDefaultTabBarHeight];
+}
+
+- (id)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [super initWithCoder:aDecoder];
+    if (self) {
+        tabBarHeight = kDefaultTabBarHeight;
+        
+        // default settings
+        _iconShadowOffset = CGSizeMake(0, -1);
+    }
+    
+    return self;
 }
 
 - (id)initWithTabBarHeight:(NSUInteger)height
@@ -263,6 +276,11 @@ typedef enum {
     }];
 }
 
+- (BOOL)wantsFullScreenLayout
+{
+    return YES;
+}
+
 #pragma mark - Setters
 
 - (void)setViewControllers:(NSMutableArray *)viewControllers
@@ -275,26 +293,23 @@ typedef enum {
 
 - (void)setSelectedViewController:(UIViewController *)selectedViewController
 {
-    UIViewController *previousSelectedViewController = selectedViewController;
+    UIViewController *previousSelectedViewController = _selectedViewController;
     if (_selectedViewController != selectedViewController)
     {
-        
         _selectedViewController = selectedViewController;
-        selectedViewController = selectedViewController;
+
+        if (previousSelectedViewController) {
+            [previousSelectedViewController willMoveToParentViewController:nil];
+        }
         
-        if ((self.childViewControllers == nil || !self.childViewControllers.count) && visible)
-        {
-			[previousSelectedViewController viewWillDisappear:NO];
-			[selectedViewController viewWillAppear:NO];
-		}
-        
+        [self addChildViewController:_selectedViewController];
+        tabBarView.adjustForStatusBar = !selectedViewController.wantsFullScreenLayout;
         [tabBarView setContentView:selectedViewController.view];
+        [_selectedViewController didMoveToParentViewController:self];
         
-        if ((self.childViewControllers == nil || !self.childViewControllers.count) && visible)
-        {
-			[previousSelectedViewController viewDidDisappear:NO];
-			[selectedViewController viewDidAppear:NO];
-		}
+        if (previousSelectedViewController) {
+            [previousSelectedViewController removeFromParentViewController];
+        }
         
         [tabBar setSelectedTab:[tabBar.tabs objectAtIndex:[self.viewControllers indexOfObject:selectedViewController]]];
     }
@@ -351,16 +366,16 @@ typedef enum {
 {
 	[super viewWillAppear:animated];
     
-    if ((self.childViewControllers == nil || !self.childViewControllers.count))
-        [self.selectedViewController viewWillAppear:animated];
+//    if ((self.childViewControllers == nil || !self.childViewControllers.count))
+//        [self.selectedViewController viewWillAppear:animated];
 }
 
 - (void)viewDidAppear:(BOOL)animated
 {
 	[super viewDidAppear:animated];
     
-    if ((self.childViewControllers == nil || !self.childViewControllers.count))
-        [self.selectedViewController viewDidAppear:animated];
+//    if ((self.childViewControllers == nil || !self.childViewControllers.count))
+//        [self.selectedViewController viewDidAppear:animated];
     
     visible = YES;
 }
@@ -369,16 +384,16 @@ typedef enum {
 {
 	[super viewWillDisappear:animated];
     
-    if ((self.childViewControllers == nil || !self.childViewControllers.count))
-        [self.selectedViewController viewWillDisappear:animated];
+//    if ((self.childViewControllers == nil || !self.childViewControllers.count))
+//        [self.selectedViewController viewWillDisappear:animated];
 }
 
 - (void)viewDidDisappear:(BOOL)animated
 {
 	[super viewDidDisappear:animated];
     
-    if (![self respondsToSelector:@selector(addChildViewController:)])
-        [self.selectedViewController viewDidDisappear:animated];
+//    if (![self respondsToSelector:@selector(addChildViewController:)])
+//        [self.selectedViewController viewDidDisappear:animated];
     
     visible = NO;
 }

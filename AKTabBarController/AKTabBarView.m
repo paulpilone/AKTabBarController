@@ -43,7 +43,7 @@
     {
         [_contentView removeFromSuperview];
         _contentView = contentView;
-        _contentView.frame = CGRectZero;
+        //_contentView.frame = CGRectZero;
         [self addSubview:_contentView];
         [self sendSubviewToBack:_contentView];
     }
@@ -58,7 +58,8 @@
     tabBarRect.origin.y = CGRectGetHeight(self.bounds) - CGRectGetHeight(_tabBar.bounds);
     [_tabBar setFrame:tabBarRect];
     
-    CGRect contentViewRect = CGRectMake(0, 0, CGRectGetWidth(self.bounds), CGRectGetHeight(self.bounds) - ((!_isTabBarHidding) ? CGRectGetHeight(_tabBar.bounds) : 0));
+    CGFloat yDelta = self.adjustForStatusBar ? 20.f : 0.f;
+    CGRect contentViewRect = CGRectMake(0, yDelta, CGRectGetWidth(self.bounds), CGRectGetHeight(self.bounds) - ((!_isTabBarHidding) ? CGRectGetHeight(_tabBar.bounds) : 0) - yDelta);
     _contentView.frame = contentViewRect;
     [_contentView setNeedsLayout];
 }
