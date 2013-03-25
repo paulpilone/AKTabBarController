@@ -58,7 +58,11 @@
     tabBarRect.origin.y = CGRectGetHeight(self.bounds) - CGRectGetHeight(_tabBar.bounds);
     [_tabBar setFrame:tabBarRect];
     
-    CGFloat yDelta = self.adjustForStatusBar ? 20.f : 0.f;
+    CGFloat yDelta = 0;
+    if (self.window.frame.size.height == self.frame.size.height && self.adjustForStatusBar) {
+        yDelta = 20.f;
+    }
+        
     CGRect contentViewRect = CGRectMake(0, yDelta, CGRectGetWidth(self.bounds), CGRectGetHeight(self.bounds) - ((!_isTabBarHidding) ? CGRectGetHeight(_tabBar.bounds) : 0) - yDelta);
     _contentView.frame = contentViewRect;
     [_contentView setNeedsLayout];
