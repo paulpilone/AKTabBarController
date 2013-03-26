@@ -32,16 +32,12 @@ static const float kPushAnimationDuration = 0.35;
 @interface AKTabBarController ()
 {
     NSArray *prevViewControllers;
-    BOOL visible;
 }
 
 typedef enum {
     AKShowHideFromLeft,
     AKShowHideFromRight
 } AKShowHideFrom;
-
-// Current active view controller
-@property (nonatomic, readwrite, strong) UIViewController *selectedViewController;
 
 - (void)loadTabs;
 - (void)showTabBar:(AKShowHideFrom)showHideFrom animated:(BOOL)animated;
@@ -61,25 +57,12 @@ typedef enum {
     NSUInteger tabBarHeight;
 }
 
-#pragma mark - Initialization
-
+/*
+ 
+ */
 - (id)init
-{    
-    return [self initWithTabBarHeight:kDefaultTabBarHeight];
-}
-
-- (id)initWithCoder:(NSCoder *)aDecoder
 {
-    self = [super initWithCoder:aDecoder];
-    if (self) {
-        tabBarHeight = kDefaultTabBarHeight;
-        
-        // default settings
-        _iconShadowOffset = CGSizeMake(0, -1);
-        _tabBarAdjustsHeight = YES;
-    }
-    
-    return self;
+    return [self initWithTabBarHeight:kDefaultTabBarHeight];
 }
 
 - (id)initWithTabBarHeight:(NSUInteger)height
@@ -92,33 +75,91 @@ typedef enum {
     // default settings
     _iconShadowOffset = CGSizeMake(0, -1);
     _tabBarAdjustsHeight = YES;
+    _selectedIndex = 0;
     
     return self;
 }
 
-- (void)loadView
+/*
+ 
+ */
+- (id)initWithCoder:(NSCoder *)aDecoder
 {
-    [super loadView];
-    
-    // Creating and adding the tab bar view
-    tabBarView = [[AKTabBarView alloc] initWithFrame:[[UIScreen mainScreen] applicationFrame]];
-    self.view = tabBarView;
-    
-    // Creating and adding the tab bar
-    CGRect tabBarRect = CGRectMake(0.0, CGRectGetHeight(self.view.bounds) - tabBarHeight, CGRectGetWidth(self.view.frame), tabBarHeight);
-    tabBar = [[AKTabBar alloc] initWithFrame:tabBarRect];
-    tabBar.delegate = self;
-    
-    if (!self.tabBarAdjustsHeight) {
-        tabBar.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+    self = [super initWithCoder:aDecoder];
+    if (self) {
+        tabBarHeight = kDefaultTabBarHeight;
+        
+        // default settings
+        _iconShadowOffset = CGSizeMake(0, -1);
+        _tabBarAdjustsHeight = YES;
+        _selectedIndex = 0;
     }
     
-    tabBarView.tabBar = tabBar;
-    tabBarView.contentView = _selectedViewController.view;
-    [[self navigationItem] setTitle:[_selectedViewController title]];
-    [self loadTabs];
+    return self;
 }
 
+- (NSArray *) selectedIconCGColors
+{
+    return _selectedIconColors ? @[(id)[[_selectedIconColors objectAtIndex:0] CGColor], (id)[[_selectedIconColors objectAtIndex:1] CGColor]] : nil;
+}
+
+- (NSArray *) iconCGColors
+{
+    return _iconColors ? @[(id)[[_iconColors objectAtIndex:0] CGColor], (id)[[_iconColors objectAtIndex:1] CGColor]] : nil;
+}
+
+- (NSArray *) tabCGColors
+{
+    return _tabColors ? @[(id)[[_tabColors objectAtIndex:0] CGColor], (id)[[_tabColors objectAtIndex:1] CGColor]] : nil;
+}
+
+- (NSArray *) selectedTabCGColors
+{
+    return _selectedTabColors ? @[(id)[[_selectedTabColors objectAtIndex:0] CGColor], (id)[[_selectedTabColors objectAtIndex:1] CGColor]] : nil;
+}
+
+/*
+ 
+ */
+- (void)setTabBarAdjustsHeight:(BOOL)tabBarAdjustsHeight
+{
+    if (tabBarAdjustsHeight != _tabBarAdjustsHeight) {
+        _tabBarAdjustsHeight = tabBarAdjustsHeight;
+        
+        // Update the tab bar and view based on the change in flag.
+        tabBar.autoresizingMask = (tabBarAdjustsHeight) ? UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight : UIViewAutoresizingFlexibleWidth;
+        
+        // TODO: Update the tab bar frame.
+        
+        // Update the view only if it's loaded.
+        if ([self isViewLoaded]) {
+            [self.view setNeedsLayout];
+        }
+    }
+}
+
+/*
+ 
+ */
+- (UIViewController *)selectedViewController
+{
+    return self.viewControllers[self.selectedIndex];
+}
+
+/*
+ 
+ */
+- (BOOL)wantsFullScreenLayout
+{
+    return YES;
+}
+
+#pragma mark -
+#pragma mark Private
+
+/*
+ 
+ */
 - (void)loadTabs
 {
     NSMutableArray *tabs = [[NSMutableArray alloc] init];
@@ -163,53 +204,80 @@ typedef enum {
     }
     
     [tabBar setTabs:tabs];
+}
+
+#pragma mark -
+#pragma mark View
+
+/*
+ 
+ */
+- (void)loadView
+{
+    [super loadView];
     
-    // Setting the first view controller as the active one
-    [tabBar setSelectedTab:[tabBar.tabs objectAtIndex:0]];
-}
-
-- (NSArray *) selectedIconCGColors
-{
-    return _selectedIconColors ? @[(id)[[_selectedIconColors objectAtIndex:0] CGColor], (id)[[_selectedIconColors objectAtIndex:1] CGColor]] : nil;
-}
-
-- (NSArray *) iconCGColors
-{
-    return _iconColors ? @[(id)[[_iconColors objectAtIndex:0] CGColor], (id)[[_iconColors objectAtIndex:1] CGColor]] : nil;
-}
-
-- (NSArray *) tabCGColors
-{
-    return _tabColors ? @[(id)[[_tabColors objectAtIndex:0] CGColor], (id)[[_tabColors objectAtIndex:1] CGColor]] : nil;
-}
-
-- (NSArray *) selectedTabCGColors
-{
-    return _selectedTabColors ? @[(id)[[_selectedTabColors objectAtIndex:0] CGColor], (id)[[_selectedTabColors objectAtIndex:1] CGColor]] : nil;
+    // Creating and adding the tab bar view
+    tabBarView = [[AKTabBarView alloc] initWithFrame:[[UIScreen mainScreen] applicationFrame]];
+    self.view = tabBarView;
+    
+    // Creating and adding the tab bar
+    CGRect tabBarRect = CGRectMake(0.0, CGRectGetHeight(self.view.bounds) - tabBarHeight, CGRectGetWidth(self.view.frame), tabBarHeight);
+    tabBar = [[AKTabBar alloc] initWithFrame:tabBarRect];
+    tabBar.delegate = self;
+    
+    if (!self.tabBarAdjustsHeight) {
+        tabBar.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+    }
+    
+    [self loadTabs];
+    tabBarView.tabBar = tabBar;
 }
 
 /*
  
-*/
-- (void)setTabBarAdjustsHeight:(BOOL)tabBarAdjustsHeight
+ */
+- (void)viewDidLoad
 {
-    if (tabBarAdjustsHeight != _tabBarAdjustsHeight) {
-        _tabBarAdjustsHeight = tabBarAdjustsHeight;
-        
-        // Update the tab bar and view based on the change in flag.
-        tabBar.autoresizingMask = (tabBarAdjustsHeight) ? UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight : UIViewAutoresizingFlexibleWidth;
-        
-        // TODO: Update the tab bar frame.
-        
-        // Update the view only if it's loaded.
-        if ([self isViewLoaded]) {
-            [self.view setNeedsLayout];
-        }
-
-    }
+    [super viewDidLoad];
+    
+    [self selectViewControllerAtIndex:self.selectedIndex fromIndex:NSNotFound];
+    [[self navigationItem] setTitle:[self.selectedViewController title]];
 }
 
-#pragma - UINavigationControllerDelegate
+/*
+ 
+ */
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+}
+
+/*
+ 
+ */
+- (void)viewDidAppear:(BOOL)animated
+{
+    [super viewDidAppear:animated];
+}
+
+/*
+ 
+ */
+- (void)viewWillDisappear:(BOOL)animated
+{
+    [super viewWillDisappear:animated];
+}
+
+/*
+ 
+ */
+- (void)viewDidDisappear:(BOOL)animated
+{
+    [super viewDidDisappear:animated];
+}
+
+#pragma mark -
+#pragma mark UINavigationControllerDelegate
 
 - (void)navigationController:(UINavigationController *)navigationController willShowViewController:(UIViewController *)viewController animated:(BOOL)animated
 {
@@ -303,45 +371,73 @@ typedef enum {
     }];
 }
 
-- (BOOL)wantsFullScreenLayout
+#pragma mark -
+#pragma mark Setters
+
+/*
+ 
+ */
+- (void)selectViewControllerAtIndex:(NSUInteger)index fromIndex:(NSUInteger)fromIndex
 {
-    return YES;
+    UIViewController *previousViewController = nil;
+    UIViewController *selectedViewController = nil;
+    if (fromIndex < [self.viewControllers count] && fromIndex != NSNotFound) {
+        previousViewController = self.viewControllers[fromIndex];
+        [previousViewController willMoveToParentViewController:nil];
+    }
+    
+    selectedViewController = self.viewControllers[index];
+    [self addChildViewController:selectedViewController];
+    [tabBarView setAdjustForStatusBar:!selectedViewController.wantsFullScreenLayout];
+    [tabBarView setContentView:selectedViewController.view];
+    [selectedViewController didMoveToParentViewController:self];
+    
+    if (previousViewController) {
+        [previousViewController removeFromParentViewController];
+    }
+    
+    [tabBar setSelectedTab:tabBar.tabs[index]];
 }
 
-#pragma mark - Setters
+/*
+ 
+ */
+- (void)setSelectedIndex:(NSUInteger)selectedIndex
+{
+    if (selectedIndex == NSNotFound) {
+        return;
+    }
+    
+    if ([self isViewLoaded]) {
+        // Select the view controller.
+        [self selectViewControllerAtIndex:selectedIndex fromIndex:_selectedIndex];
+    }
+    
+    // Update the selected index.
+    _selectedIndex = selectedIndex;
+}
 
+/*
+ 
+ */
 - (void)setViewControllers:(NSMutableArray *)viewControllers
 {
     _viewControllers = viewControllers;
     
     // When setting the view controllers, the first vc is the selected one;
-    [self setSelectedViewController:[viewControllers objectAtIndex:0]];
+    self.selectedIndex = 0;
 }
 
+/*
+ 
+ */
 - (void)setSelectedViewController:(UIViewController *)selectedViewController
 {
-    UIViewController *previousSelectedViewController = _selectedViewController;
-    if (_selectedViewController != selectedViewController)
-    {
-        _selectedViewController = selectedViewController;
-
-        if (previousSelectedViewController) {
-            [previousSelectedViewController willMoveToParentViewController:nil];
-        }
-        
-        [self addChildViewController:_selectedViewController];
-        tabBarView.adjustForStatusBar = !selectedViewController.wantsFullScreenLayout;
-        [tabBarView setContentView:selectedViewController.view];
-        [_selectedViewController didMoveToParentViewController:self];
-        
-        if (previousSelectedViewController) {
-            [previousSelectedViewController removeFromParentViewController];
-        }
-        
-        [tabBar setSelectedTab:[tabBar.tabs objectAtIndex:[self.viewControllers indexOfObject:selectedViewController]]];
-    }
+    NSUInteger index = [self.viewControllers indexOfObject:selectedViewController];
+    if (index == NSNotFound) return;
+    
+    self.selectedIndex = index;
 }
-
 
 #pragma mark - Required Protocol Method
 
@@ -361,7 +457,8 @@ typedef enum {
     }
 }
 
-#pragma mark - Rotation Events
+#pragma mark -
+#pragma mark Rotation
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation
 {
@@ -370,7 +467,6 @@ typedef enum {
 
 - (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration
 {
-    //[self.selectedViewController willRotateToInterfaceOrientation:toInterfaceOrientation duration:duration];
 }
 
 - (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation duration:(NSTimeInterval)duration
@@ -378,52 +474,11 @@ typedef enum {
     // Redraw with will rotating and keeping the aspect ratio
     for (AKTab *tab in [tabBar tabs])
         [tab setNeedsDisplay];
-    
-    //[self.selectedViewController willAnimateRotationToInterfaceOrientation:interfaceOrientation duration:duration];
 }
 
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation
 {
-    NSLog(@"Tab bar frame: %@", NSStringFromCGRect(tabBar.frame));
-    //[self.selectedViewController didRotateFromInterfaceOrientation:fromInterfaceOrientation];
-}
-
-#pragma mark - ViewController Life cycle
-
-- (void)viewWillAppear:(BOOL)animated
-{
-	[super viewWillAppear:animated];
     
-//    if ((self.childViewControllers == nil || !self.childViewControllers.count))
-//        [self.selectedViewController viewWillAppear:animated];
-}
-
-- (void)viewDidAppear:(BOOL)animated
-{
-	[super viewDidAppear:animated];
-    
-//    if ((self.childViewControllers == nil || !self.childViewControllers.count))
-//        [self.selectedViewController viewDidAppear:animated];
-    
-    visible = YES;
-}
-
-- (void)viewWillDisappear:(BOOL)animated
-{
-	[super viewWillDisappear:animated];
-    
-//    if ((self.childViewControllers == nil || !self.childViewControllers.count))
-//        [self.selectedViewController viewWillDisappear:animated];
-}
-
-- (void)viewDidDisappear:(BOOL)animated
-{
-	[super viewDidDisappear:animated];
-    
-//    if (![self respondsToSelector:@selector(addChildViewController:)])
-//        [self.selectedViewController viewDidDisappear:animated];
-    
-    visible = NO;
 }
 
 @end

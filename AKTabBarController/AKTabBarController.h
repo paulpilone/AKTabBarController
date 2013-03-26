@@ -87,7 +87,10 @@
 @property (nonatomic, strong)  UIColor *selectedTextColor;
 
 // Exposes the selected view controller.
-@property (nonatomic, readonly, strong) UIViewController *selectedViewController;
+@property (nonatomic, weak) UIViewController *selectedViewController;
+
+//
+@property (nonatomic) NSUInteger selectedIndex;
 
 // Initialization with a specific height.
 - (id)initWithTabBarHeight:(NSUInteger)height;
