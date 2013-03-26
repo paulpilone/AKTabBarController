@@ -76,6 +76,7 @@ typedef enum {
         
         // default settings
         _iconShadowOffset = CGSizeMake(0, -1);
+        _tabBarAdjustsHeight = YES;
     }
     
     return self;
@@ -90,6 +91,7 @@ typedef enum {
     
     // default settings
     _iconShadowOffset = CGSizeMake(0, -1);
+    _tabBarAdjustsHeight = YES;
     
     return self;
 }
@@ -106,6 +108,10 @@ typedef enum {
     CGRect tabBarRect = CGRectMake(0.0, CGRectGetHeight(self.view.bounds) - tabBarHeight, CGRectGetWidth(self.view.frame), tabBarHeight);
     tabBar = [[AKTabBar alloc] initWithFrame:tabBarRect];
     tabBar.delegate = self;
+    
+    if (!self.tabBarAdjustsHeight) {
+        tabBar.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+    }
     
     tabBarView.tabBar = tabBar;
     tabBarView.contentView = _selectedViewController.view;
@@ -180,6 +186,27 @@ typedef enum {
 - (NSArray *) selectedTabCGColors
 {
     return _selectedTabColors ? @[(id)[[_selectedTabColors objectAtIndex:0] CGColor], (id)[[_selectedTabColors objectAtIndex:1] CGColor]] : nil;
+}
+
+/*
+ 
+*/
+- (void)setTabBarAdjustsHeight:(BOOL)tabBarAdjustsHeight
+{
+    if (tabBarAdjustsHeight != _tabBarAdjustsHeight) {
+        _tabBarAdjustsHeight = tabBarAdjustsHeight;
+        
+        // Update the tab bar and view based on the change in flag.
+        tabBar.autoresizingMask = (tabBarAdjustsHeight) ? UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight : UIViewAutoresizingFlexibleWidth;
+        
+        // TODO: Update the tab bar frame.
+        
+        // Update the view only if it's loaded.
+        if ([self isViewLoaded]) {
+            [self.view setNeedsLayout];
+        }
+
+    }
 }
 
 #pragma - UINavigationControllerDelegate
@@ -343,7 +370,7 @@ typedef enum {
 
 - (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration
 {
-    [self.selectedViewController willRotateToInterfaceOrientation:toInterfaceOrientation duration:duration];
+    //[self.selectedViewController willRotateToInterfaceOrientation:toInterfaceOrientation duration:duration];
 }
 
 - (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation duration:(NSTimeInterval)duration
@@ -352,12 +379,13 @@ typedef enum {
     for (AKTab *tab in [tabBar tabs])
         [tab setNeedsDisplay];
     
-    [self.selectedViewController willAnimateRotationToInterfaceOrientation:interfaceOrientation duration:duration];
+    //[self.selectedViewController willAnimateRotationToInterfaceOrientation:interfaceOrientation duration:duration];
 }
 
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation
 {
-    [self.selectedViewController didRotateFromInterfaceOrientation:fromInterfaceOrientation];
+    NSLog(@"Tab bar frame: %@", NSStringFromCGRect(tabBar.frame));
+    //[self.selectedViewController didRotateFromInterfaceOrientation:fromInterfaceOrientation];
 }
 
 #pragma mark - ViewController Life cycle

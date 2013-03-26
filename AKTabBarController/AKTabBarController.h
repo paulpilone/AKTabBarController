@@ -35,6 +35,9 @@
 // Used to show / hide the tabs title.
 @property (nonatomic, assign) BOOL tabTitleIsHidden;
 
+// Determines whether the tab bar grows/shrinks based on overall view height. Default is YES.
+@property (nonatomic, assign) BOOL tabBarAdjustsHeight;
+
 // Tabs icon colors.
 @property (nonatomic, strong) NSArray *iconColors;
 
@@ -83,6 +86,7 @@
 // Tab selected text color
 @property (nonatomic, strong)  UIColor *selectedTextColor;
 
+// Exposes the selected view controller.
 @property (nonatomic, readonly, strong) UIViewController *selectedViewController;
 
 // Initialization with a specific height.
